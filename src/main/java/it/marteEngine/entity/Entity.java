@@ -1,9 +1,5 @@
 package it.marteEngine.entity;
 
-import it.marteEngine.ME;
-import it.marteEngine.StateManager;
-import it.marteEngine.World;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -22,6 +18,10 @@ import org.newdawn.slick.SpriteSheet;
 import org.newdawn.slick.geom.Rectangle;
 import org.newdawn.slick.geom.Shape;
 import org.newdawn.slick.geom.Vector2f;
+
+import it.marteEngine.ME;
+import it.marteEngine.StateManager;
+import it.marteEngine.World;
 
 //TODO modify hitbox coordinates to a real shape without changing method interface.
 //TODO a shape can be rotated and scaled when the entity is rotated and scaled.
@@ -69,7 +69,9 @@ public abstract class Entity implements Comparable<Entity> {
 	public boolean wrapHorizontal = false;
 	public boolean wrapVertical = false;
 
-	/** speed vector (x,y): specifies x and y movement per update call in pixels */
+	/**
+	 * speed vector (x,y): specifies x and y movement per update call in pixels
+	 */
 	public Vector2f speed = new Vector2f(0, 0);
 
 	/**
@@ -165,8 +167,7 @@ public abstract class Entity implements Comparable<Entity> {
 		}
 	}
 
-	public void update(GameContainer container, int delta)
-			throws SlickException {
+	public void update(GameContainer container, int delta) throws SlickException {
 		previousx = x;
 		previousy = y;
 		if (stateManager != null && stateManager.currentState() != null) {
@@ -194,8 +195,18 @@ public abstract class Entity implements Comparable<Entity> {
 		}
 	}
 
-	public void render(GameContainer container, Graphics g)
-			throws SlickException {
+	protected Animation getCurrentAnim(String animationName) {
+		if (animations != null) {
+			if (currentAnim != null) {
+				if (currentAnim.equals(animationName)) {
+					return animations.get(currentAnim);
+				}
+			}
+		}
+		return null;
+	}
+
+	public void render(GameContainer container, Graphics g) throws SlickException {
 		if (stateManager != null && stateManager.currentState() != null) {
 			stateManager.render(g);
 			return;
@@ -245,8 +256,7 @@ public abstract class Entity implements Comparable<Entity> {
 		}
 		if (ME.debugEnabled && collidable) {
 			g.setColor(ME.borderColor);
-			Rectangle hitBox = new Rectangle(x + hitboxOffsetX, y
-					+ hitboxOffsetY, hitboxWidth, hitboxHeight);
+			Rectangle hitBox = new Rectangle(x + hitboxOffsetX, y + hitboxOffsetY, hitboxWidth, hitboxHeight);
 			g.draw(hitBox);
 			g.setColor(Color.white);
 			g.drawRect(x, y, 1, 1);
@@ -279,8 +289,7 @@ public abstract class Entity implements Comparable<Entity> {
 		this.height = sheet.getSprite(0, 0).getHeight();
 	}
 
-	public void addAnimation(String animName, boolean loop, int row,
-			int... frames) {
+	public void addAnimation(String animName, boolean loop, int row, int... frames) {
 		Animation anim = new Animation(false);
 		anim.setLooping(loop);
 		for (int frame : frames) {
@@ -289,8 +298,7 @@ public abstract class Entity implements Comparable<Entity> {
 		addAnimation(animName, anim);
 	}
 
-	public Animation addAnimation(SpriteSheet sheet, String animName,
-			boolean loop, int row, int... frames) {
+	public Animation addAnimation(SpriteSheet sheet, String animName, boolean loop, int row, int... frames) {
 		Animation anim = new Animation(false);
 		anim.setLooping(loop);
 		for (int frame : frames) {
@@ -304,15 +312,12 @@ public abstract class Entity implements Comparable<Entity> {
 	 * Add animation to entity. The frames can be flipped horizontally and/or
 	 * vertically.
 	 */
-	public void addFlippedAnimation(String animName, boolean loop,
-			boolean fliphorizontal, boolean flipvertical, int row,
-			int... frames) {
+	public void addFlippedAnimation(String animName, boolean loop, boolean fliphorizontal, boolean flipvertical,
+			int row, int... frames) {
 		Animation anim = new Animation(false);
 		anim.setLooping(loop);
 		for (int frame : frames) {
-			anim.addFrame(
-					sheet.getSprite(frame, row).getFlippedCopy(fliphorizontal,
-							flipvertical), duration);
+			anim.addFrame(sheet.getSprite(frame, row).getFlippedCopy(fliphorizontal, flipvertical), duration);
 		}
 		addAnimation(animName, anim);
 	}
@@ -395,8 +400,7 @@ public abstract class Entity implements Comparable<Entity> {
 		for (int i = 0; i < checked.length; i++) {
 			if (input.isKeyPressed(checked[i])) {
 				return true;
-			} else if (checked[i] == Input.MOUSE_LEFT_BUTTON
-					|| checked[i] == Input.MOUSE_RIGHT_BUTTON) {
+			} else if (checked[i] == Input.MOUSE_LEFT_BUTTON || checked[i] == Input.MOUSE_RIGHT_BUTTON) {
 				if (input.isMousePressed(checked[i])) {
 					return true;
 				}
@@ -490,15 +494,10 @@ public abstract class Entity implements Comparable<Entity> {
 		// offset
 		for (Entity entity : world.getEntities()) {
 			if (entity.collidable && entity.isType(type)) {
-				if (!entity.equals(this)
-						&& x + hitboxOffsetX + hitboxWidth > entity.x
-								+ entity.hitboxOffsetX
-						&& y + hitboxOffsetY + hitboxHeight > entity.y
-								+ entity.hitboxOffsetY
-						&& x + hitboxOffsetX < entity.x + entity.hitboxOffsetX
-								+ entity.hitboxWidth
-						&& y + hitboxOffsetY < entity.y + entity.hitboxOffsetY
-								+ entity.hitboxHeight) {
+				if (!entity.equals(this) && x + hitboxOffsetX + hitboxWidth > entity.x + entity.hitboxOffsetX
+						&& y + hitboxOffsetY + hitboxHeight > entity.y + entity.hitboxOffsetY
+						&& x + hitboxOffsetX < entity.x + entity.hitboxOffsetX + entity.hitboxWidth
+						&& y + hitboxOffsetY < entity.y + entity.hitboxOffsetY + entity.hitboxHeight) {
 					this.collisionResponse(entity);
 					entity.collisionResponse(this);
 					return entity;
@@ -538,15 +537,10 @@ public abstract class Entity implements Comparable<Entity> {
 	 */
 	public Entity collideWith(Entity other, float x, float y) {
 		if (other.collidable) {
-			if (!other.equals(this)
-					&& x + hitboxOffsetX + hitboxWidth > other.x
-							+ other.hitboxOffsetX
-					&& y + hitboxOffsetY + hitboxHeight > other.y
-							+ other.hitboxOffsetY
-					&& x + hitboxOffsetX < other.x + other.hitboxOffsetX
-							+ other.hitboxWidth
-					&& y + hitboxOffsetY < other.y + other.hitboxOffsetY
-							+ other.hitboxHeight) {
+			if (!other.equals(this) && x + hitboxOffsetX + hitboxWidth > other.x + other.hitboxOffsetX
+					&& y + hitboxOffsetY + hitboxHeight > other.y + other.hitboxOffsetY
+					&& x + hitboxOffsetX < other.x + other.hitboxOffsetX + other.hitboxWidth
+					&& y + hitboxOffsetY < other.y + other.hitboxOffsetY + other.hitboxHeight) {
 				this.collisionResponse(other);
 				other.collisionResponse(this);
 				return other;
@@ -562,15 +556,10 @@ public abstract class Entity implements Comparable<Entity> {
 		ArrayList<Entity> collidingEntities = null;
 		for (Entity entity : world.getEntities()) {
 			if (entity.collidable && entity.isType(type)) {
-				if (!entity.equals(this)
-						&& x + hitboxOffsetX + hitboxWidth > entity.x
-								+ entity.hitboxOffsetX
-						&& y + hitboxOffsetY + hitboxHeight > entity.y
-								+ entity.hitboxOffsetY
-						&& x + hitboxOffsetX < entity.x + entity.hitboxOffsetX
-								+ entity.hitboxWidth
-						&& y + hitboxOffsetY < entity.y + entity.hitboxOffsetY
-								+ entity.hitboxHeight) {
+				if (!entity.equals(this) && x + hitboxOffsetX + hitboxWidth > entity.x + entity.hitboxOffsetX
+						&& y + hitboxOffsetY + hitboxHeight > entity.y + entity.hitboxOffsetY
+						&& x + hitboxOffsetX < entity.x + entity.hitboxOffsetX + entity.hitboxWidth
+						&& y + hitboxOffsetY < entity.y + entity.hitboxOffsetY + entity.hitboxHeight) {
 					this.collisionResponse(entity);
 					entity.collisionResponse(this);
 					if (collidingEntities == null)
@@ -594,8 +583,7 @@ public abstract class Entity implements Comparable<Entity> {
 	 * @return If this entity contains the specified point
 	 */
 	public boolean collidePoint(float x, float y) {
-		if (x >= this.x - hitboxOffsetX && y >= this.y - hitboxOffsetY
-				&& x < this.x - hitboxOffsetX + width
+		if (x >= this.x - hitboxOffsetX && y >= this.y - hitboxOffsetY && x < this.x - hitboxOffsetX + width
 				&& y < this.y - hitboxOffsetY + height) {
 			this.collisionResponse(null);
 			return true;
@@ -695,7 +683,9 @@ public abstract class Entity implements Comparable<Entity> {
 		this.visible = false;
 	}
 
-	/***************** some methods to deal with angles and vectors ************************************/
+	/*****************
+	 * some methods to deal with angles and vectors
+	 ************************************/
 
 	public int getAngleToPosition(Vector2f otherPos) {
 		Vector2f diff = otherPos.sub(new Vector2f(x, y));
@@ -739,7 +729,9 @@ public abstract class Entity implements Comparable<Entity> {
 		return (float) (Math.toDegrees(angle) - 90);
 	}
 
-	/***************** some methods to deal with alarms ************************************/
+	/*****************
+	 * some methods to deal with alarms
+	 ************************************/
 
 	/**
 	 * Add an alarm with the given parameters and add it to this Entity
@@ -751,8 +743,7 @@ public abstract class Entity implements Comparable<Entity> {
 	/**
 	 * Add an alarm with given parameters and add it to this Entity
 	 */
-	public void addAlarm(String alarmName, int triggerTime, boolean oneShot,
-			boolean startNow) {
+	public void addAlarm(String alarmName, int triggerTime, boolean oneShot, boolean startNow) {
 		Alarm alarm = new Alarm(alarmName, triggerTime, oneShot);
 		alarms.addAlarm(alarm, startNow);
 	}
@@ -834,8 +825,7 @@ public abstract class Entity implements Comparable<Entity> {
 	}
 
 	public String toCsv() {
-		return "" + (int) x + "," + (int) y + "," + name + ","
-				+ collisionTypesToString();
+		return "" + (int) x + "," + (int) y + "," + name + "," + collisionTypesToString();
 	}
 
 	private String collisionTypesToString() {
@@ -861,8 +851,7 @@ public abstract class Entity implements Comparable<Entity> {
 		List<Entity> result = new ArrayList<Entity>();
 		for (Entity entity : world.getEntities()) {
 			if (entity.collidable && !entity.equals(this)) {
-				Rectangle rec = new Rectangle(entity.x, entity.y, entity.width,
-						entity.height);
+				Rectangle rec = new Rectangle(entity.x, entity.y, entity.width, entity.height);
 				if (shape.intersects(rec)) {
 					result.add(entity);
 				}
