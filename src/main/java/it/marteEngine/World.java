@@ -1,7 +1,5 @@
 package it.marteEngine;
 
-import it.marteEngine.entity.Entity;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,6 +16,8 @@ import org.newdawn.slick.geom.Rectangle;
 import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
 import org.newdawn.slick.util.Log;
+
+import it.marteEngine.entity.Entity;
 
 //TODO addAll() muss intern add() aufrufen, um korrekt nach flags in die listen einzusortieren
 public class World extends BasicGameState {
@@ -57,6 +57,8 @@ public class World extends BasicGameState {
 	/** available commands for world **/
 	protected Map<String, int[]> commands = new HashMap<String, int[]>();
 
+	private boolean autoCleanInput = true;
+
 	public World(int id) {
 		this.id = id;
 	}
@@ -66,8 +68,7 @@ public class World extends BasicGameState {
 		this.container = container;
 	}
 
-	public void init(GameContainer container, StateBasedGame game)
-			throws SlickException {
+	public void init(GameContainer container, StateBasedGame game) throws SlickException {
 		this.container = container;
 		if (width == 0)
 			width = container.getWidth();
@@ -77,14 +78,16 @@ public class World extends BasicGameState {
 	}
 
 	@Override
-	public void enter(GameContainer container, StateBasedGame game)
-			throws SlickException {
+	public void enter(GameContainer container, StateBasedGame game) throws SlickException {
 		ME.world = this;
+		if (autoCleanInput) {
+			container.getInput().clearControlPressedRecord();
+			container.getInput().clearKeyPressedRecord();
+			container.getInput().clearMousePressedRecord();
+		}
 	}
 
-	public void render(GameContainer container, StateBasedGame game, Graphics g)
-			throws SlickException {
-
+	public void render(GameContainer container, StateBasedGame game, Graphics g) throws SlickException {
 		renderedEntities = 0;
 		// first render entities below camera
 		for (Entity e : belowCamera) {
@@ -132,21 +135,19 @@ public class World extends BasicGameState {
 		ME.render(container, game, g);
 	}
 
-	private void renderEntity(Entity e, Graphics g, GameContainer container)
-			throws SlickException {
+	private void renderEntity(Entity e, Graphics g, GameContainer container) throws SlickException {
 		renderedEntities++;
 		if (ME.debugEnabled && e.collidable) {
 			g.setColor(ME.borderColor);
-			Rectangle hitBox = new Rectangle(e.x + e.hitboxOffsetX, e.y
-					+ e.hitboxOffsetY, e.hitboxWidth, e.hitboxHeight);
+			Rectangle hitBox = new Rectangle(e.x + e.hitboxOffsetX, e.y + e.hitboxOffsetY, e.hitboxWidth,
+					e.hitboxHeight);
 			g.draw(hitBox);
 			g.setColor(Color.white);
 		}
 		e.render(container, g);
 	}
 
-	public void update(GameContainer container, StateBasedGame game, int delta)
-			throws SlickException {
+	public void update(GameContainer container, StateBasedGame game, int delta) throws SlickException {
 		if (container == null)
 			throw new SlickException("no container set");
 
@@ -222,15 +223,15 @@ public class World extends BasicGameState {
 		e.setWorld(this);
 		if (flags.length == 1) {
 			switch (flags[0]) {
-				case BELOW :
-					belowCamera.add(e);
-					break;
-				case GAME :
-					addable.add(e);
-					break;
-				case ABOVE :
-					aboveCamera.add(e);
-					break;
+			case BELOW:
+				belowCamera.add(e);
+				break;
+			case GAME:
+				addable.add(e);
+				break;
+			case ABOVE:
+				aboveCamera.add(e);
+				break;
 			}
 		} else
 			addable.add(e);
@@ -344,8 +345,7 @@ public class World extends BasicGameState {
 
 	public void setCameraOn(Entity entity) {
 		if (camera == null) {
-			this.setCamera(new Camera(this, entity, this.container.getWidth(),
-					this.container.getHeight()));
+			this.setCamera(new Camera(this, entity, this.container.getWidth(), this.container.getHeight()));
 		}
 		this.camera.setFollow(entity);
 	}
@@ -388,8 +388,7 @@ public class World extends BasicGameState {
 	public boolean isEmpty(int x, int y, int depth) {
 		Rectangle rect;
 		for (Entity entity : entities) {
-			rect = new Rectangle(entity.x, entity.y, entity.width,
-					entity.height);
+			rect = new Rectangle(entity.x, entity.y, entity.width, entity.height);
 			if (entity.depth == depth && rect.contains(x, y)) {
 				return false;
 			}
@@ -400,8 +399,7 @@ public class World extends BasicGameState {
 	public Entity find(int x, int y) {
 		Rectangle rect;
 		for (Entity entity : entities) {
-			rect = new Rectangle(entity.x, entity.y, entity.width,
-					entity.height);
+			rect = new Rectangle(entity.x, entity.y, entity.width, entity.height);
 			if (rect.contains(x, y)) {
 				return entity;
 			}
@@ -468,14 +466,17 @@ public class World extends BasicGameState {
 		for (int i = 0; i < checked.length; i++) {
 			if (this.container.getInput().isKeyPressed(checked[i])) {
 				return true;
-			} else if (checked[i] == Input.MOUSE_LEFT_BUTTON
-					|| checked[i] == Input.MOUSE_RIGHT_BUTTON) {
+			} else if (checked[i] == Input.MOUSE_LEFT_BUTTON || checked[i] == Input.MOUSE_RIGHT_BUTTON) {
 				if (this.container.getInput().isMousePressed(checked[i])) {
 					return true;
 				}
 			}
 		}
 		return false;
+	}
+
+	public void setInputAutoClean(boolean auto) {
+		autoCleanInput = auto;
 	}
 
 }
